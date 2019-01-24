@@ -1,26 +1,69 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component, Fragment } from "react";
+import { Route, Redirect } from "react-router-dom";
+import Cookies from "js-cookie";
+
+import Home from "./pages/Home";
+import SignUp from "./pages/Signup";
+import SignIn from "./pages/Signin";
+import UserList from "./pages/UserList";
 
 class App extends Component {
+  state = {
+    isAuthenticated: false
+  };
+
+  componentDidMount() {
+    const token = Cookies.get("token");
+
+    if (token) {
+      this.setState({ isAunthenticated: true });
+    }
+  }
+
+  updateAuthStatus = value => {
+    this.setState({ isAuthenticated: value });
+  };
+
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
+      <Fragment>
+        <Route path="/" exact component={Home} />
+        <Route
+          path="/signup"
+          render={props => {
+            if (!this.state.isAuthenticated) {
+              return <SignUp {...props} />;
+            } else {
+              return <Redirect to="/users" />;
+            }
+          }}
+        />
+        <Route
+          path="/signin"
+          render={props => {
+            if (!this.state.isAuthenticated) {
+              return <SignIn {...props} login={this.updateAuthStatus} />;
+            } else {
+              return <Redirect to="/users" />;
+            }
+          }}
+        />
+        <Route
+          path="/users"
+          render={props => {
+            if (this.state.isAuthenticated) {
+              return (
+                <UserList
+                  {...props}
+                  logout={() => this.updateAuthStatus(false)}
+                />
+              );
+            } else {
+              return <Redirect to="/signin" />;
+            }
+          }}
+        />
+      </Fragment>
     );
   }
 }
